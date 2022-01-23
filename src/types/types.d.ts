@@ -7,8 +7,8 @@ type TabsStackParams = {
 
 type RootStackParams = {
   Home: NavigatorScreenParams<TabsStackParams>;
-  Movie: undefined;
-  Show: undefined;
+  Movie: {item: Movie};
+  Show: {item: Show};
 };
 
 type Movie = {

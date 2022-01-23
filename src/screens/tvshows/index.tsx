@@ -1,16 +1,22 @@
 /* eslint-disable no-catch-shadow */
 /* eslint-disable @typescript-eslint/no-shadow */
 import {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
+import {CompositeScreenProps} from '@react-navigation/native';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import React, {useContext, useEffect, useState} from 'react';
-import {ScrollView, Text, View} from 'react-native';
+import {FlatList, Text, View} from 'react-native';
 import api, {api_key} from '../../api';
 import {AppContext} from '../../components/Context';
-import {TabsStackParams} from '../../types/types';
+import ListItem from '../../components/ListItem';
+import {RootStackParams, Show, TabsStackParams} from '../../types/types';
 
-type Props = BottomTabScreenProps<TabsStackParams, 'TVShows'>;
+type Props = CompositeScreenProps<
+  BottomTabScreenProps<TabsStackParams, 'TVShows'>,
+  NativeStackScreenProps<RootStackParams>
+>;
 
 const TVShowsScreen = (props: Props) => {
-  const {} = props;
+  const {navigation} = props;
   const {topShows, setTopShows} = useContext(AppContext);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<any | undefined>(undefined);
@@ -19,21 +25,35 @@ const TVShowsScreen = (props: Props) => {
     const getTopMovies = async () => {
       try {
         setLoading(true);
-        const fetchedMovies = await api.get(`Top250TVs/${api_key}`);
-        if (fetchedMovies.data) {
-          setTopShows(fetchedMovies.data.items);
+        const fetchedShows = await api.get(`Top250TVs/${api_key}`);
+
+        if (fetchedShows.data) {
+          setTopShows(fetchedShows.data.items);
         }
+
         setLoading(false);
       } catch (error) {
         setError(error);
         setLoading(false);
       }
     };
+
     if (!topShows) {
       getTopMovies();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const renderItem = ({item}: {item: Show}) => {
+    return (
+      <ListItem
+        item={item}
+        onPress={() => {
+          navigation.navigate('Show', {item});
+        }}
+      />
+    );
+  };
 
   if (loading) {
     return (
@@ -54,12 +74,14 @@ const TVShowsScreen = (props: Props) => {
 
   return (
     <View style={{flex: 1}}>
-      <Text>Movies Screen</Text>
-      <ScrollView>
-        {topShows?.map(show => {
-          return <Text>{show.title}</Text>;
-        })}
-      </ScrollView>
+      <Text>Top 250 TV Shows</Text>
+      <View>
+        <FlatList
+          data={topShows}
+          renderItem={renderItem}
+          keyExtractor={item => item.id}
+        />
+      </View>
     </View>
   );
 };

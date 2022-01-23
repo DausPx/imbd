@@ -6,10 +6,11 @@ import {RootStackParams} from '../../types/types';
 type Props = NativeStackScreenProps<RootStackParams, 'Movie'>;
 
 const MovieScreen = (props: Props) => {
-  const {} = props;
+  const {route} = props;
+  const {item} = route.params;
   return (
     <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
-      <Text>Movie Screen</Text>
+      <Text>{item.title}</Text>
     </View>
   );
 };
