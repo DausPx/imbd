@@ -3,12 +3,15 @@
 import {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
 import {CompositeScreenProps} from '@react-navigation/native';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import React, {useContext, useEffect, useState} from 'react';
-import {FlatList, Text, View} from 'react-native';
+import React, {useContext, useEffect, useMemo, useState} from 'react';
+import {ActivityIndicator, FlatList, Text, View} from 'react-native';
 import api, {api_key} from '../../api';
 import {AppContext} from '../../components/Context';
 import ListItem from '../../components/ListItem';
+import SearchInput from '../../components/SearchInput';
 import {Movie, RootStackParams, TabsStackParams} from '../../types/types';
+
+import styles from './styles';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<TabsStackParams, 'Movies'>,
@@ -20,6 +23,7 @@ const MoviesScreen = (props: Props) => {
   const {topMovies, setTopMovies} = useContext(AppContext);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<any | undefined>(undefined);
+  const [searchText, setSearchText] = useState('');
 
   useEffect(() => {
     const getTopMovies = async () => {
@@ -44,6 +48,18 @@ const MoviesScreen = (props: Props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const filteredMovies = useMemo(() => {
+    return topMovies?.filter(movie => {
+      try {
+        return movie.title
+          .toLocaleLowerCase()
+          .includes(searchText.toLocaleLowerCase());
+      } catch {
+        return false;
+      }
+    });
+  }, [topMovies, searchText]);
+
   const renderItem = ({item}: {item: Movie}) => {
     return (
       <ListItem
@@ -58,7 +74,7 @@ const MoviesScreen = (props: Props) => {
   if (loading) {
     return (
       <View>
-        <Text>loading</Text>
+        <ActivityIndicator />
       </View>
     );
   }
@@ -73,11 +89,16 @@ const MoviesScreen = (props: Props) => {
   }
 
   return (
-    <View style={{flex: 1}}>
-      <Text>Top 250 Movies</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Top 250 Movies</Text>
+      <SearchInput
+        searchText={searchText}
+        placeholder="Filter Movies"
+        setSearchText={setSearchText}
+      />
       <View>
         <FlatList
-          data={topMovies}
+          data={filteredMovies}
           renderItem={renderItem}
           keyExtractor={item => item.id}
         />
